@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SwiftFind</title>
+  <link rel="icon" href="https://img.icons&.com/fluency/48/search.png" type="image/png">
+  <style>
+     body {
+      background-color: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .logo {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .logo img {
+      width: 40px;
+      margin-right: 10px;
+    }
+
+    .search-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    input[type="text"] {
+     padding: 10px;
+     width: 300px;
+     font-size: 16px;
+     border: none;
+     border-radius: 5px;
+     outline: none;
+    }
+    .mic-button, .search-button {
+      background: #111;
+      border: none;
+      border-radius: 50%;
+      padding: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+      transition: background 0.33;
+    }
+
+    .mic-button:hover, .search-button:hover { 
+      background:#333;
+    }
+
+    .mic-button img, .search-button img {
+      width: 24px;
+      height: 24px;
+    }
+        
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      margin: 0.5px;
+      background: #222;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: #555;
+    }
+    .history {
+      margin-top: 10px;
+      color: #aaa;
+      font-size: 14px;
+    }
+    
+    .history span{
+      margin: 0 5px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    #results {
+      margin-top: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .result-card {
+      background: #1e1e1e;
+      border-radius: 10px;
+      padding: 15px;
+      width: 280px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.055);
+      text-align: left;
+    }
+
+    .result-card img {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+
+    .result-card h3 {
+      margin: 10px 0 5px;
+      font-size: 18px;
+    }
+
+    .result-card p {
+      font-size: 14px;
+      color: #ccc;
+    }
+    
+    .result-card a {
+      display: inline-block;
+      margin-top: 5px;
+      color: #4ea1f3;
+      text-decoration: none;
+    }
+
+      .loader {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .loader span {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin: 0 2px;
+      background: #fff;
+      border-radius: 50%;
+      animation: bounce is infinite ease-in-out;
+    }
+    
+    .loader span:nth-child(2) {
+      animation-delay: 0.2s;
+    } 
+    
+    .loader span:nth-child(3) {
+      animation-delay: 0.4s;
+    } 
+
+    @keyframes bounce {
+      0%, 80%, 100% {transform: scale(0);}
+      40% {transform: scale(1);}
+    }
+    </style>
+  </head>
+  <body>
+    <div class="logo">
+      <img src="https://img.icons&.com/fluency/48/search.png" alt="SwiftFind Logo" />
+      <h1>SwiftFind</h1>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="setMode('web')">Web</div>
+      <div class="tab" onclick="setMode('video')">Video</div>
+      <div class="tab" onclick="setMode('image')">Image</div>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="search-box" placeholder="Search SwiftFind..." />
+        <button onclick="startVoiceSearch()" class="mic-button" title="Voice Search">
+          <img src="" alt="https://img.icons&.com/ios-filled/30/ffffff/search--v1.png" alt="Search" />
+          </button>
+      </div>
+
+      <div class="history" id="Search-history"></div>
+      <div class="loader" id="loader"><span></span><span></span><span></span></div>
+      <div id="results"></div>
+
+      <script>
+        const YOUTUBE_API_KEY='AlzaSyAddouVRN9e_JXe6Yu6K9TMJOd0oqa4_K0';
+        const GOOGLE_API_KEY='AlzaSyBEXRud1V4cbNo6QQjlGA7Mq0c-o68oYKw';
+        const CSE_TD='e2a47aed7a3b24860';
+      
+        let mode ='web';
+
+        function setMode(newMode) {
+          mode = newMode;
+          document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+          document.querySelector(`.tab:nth-child(${mode === 'video' ? 2 : 3})`).classList.add('active');
+        }  
+
+        function startVoiceSearch() {
+          const recognition =new(<window.SpeechRecognition |window.webkitSpeechRecognition)();
+          recognition.start();
+          recognition.onresult = function (event) {
+            const query = event.results[0][0].transcript;
+
+document.getElementById('search-box').value = query;
+            performSearch();
+            };
+           }
+           
+           function performSearch(){
+            const query =
+document.getElementById('search-box').value
+            if (!query) return;
+
+            searchHistory.push(query);
+            updateSearchHistory();
+            showLoader(true)
+
+            let apiUrl =
+       `https://www.googleapis.com/customsearch/v1?q=${query}&key=${GOOGLE_API_KEY}&cx=${CX_ID}`;
+        if (searchMode === 'video') {
+          apiUrl =
+         `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&key=${YOUTUBE_API_KEY}&maxResults=10&type=video`;
+              } else if (searchMode === 'image')
+{
+             apiUrl =
+             `https://www.googleapis.com/customsearch/v1?q=${query}&searchType=image&key=${GOOGLE_API_KEY}&cx=${CX_ID}`;
+                }
+
+                fetch(apiUrl)
+                 .then(response =>
+response.json())
+                 .then(<data => {
+                   showLoader(false);
+                   displayResults(data);
+                });
+              }
+              
+              function updateSearchHistory() {
+                const historyDiv =
+document.getElementById('Search-history');
+                historyDiv.innerHTML ='search History: ';
+                searchHistory.forEach((query,index) => {
+                  const historyItem=
+                  document.createElement('span');
+                  historyItem.textContent = query;
+                  historyItem.onclick=() => {
+
+              document.getElementById('search-box').value = query;
+                 performSearch();
+                };
+                
+              historyDiv.appendChild(document.createTextNode(','));
+            });
+          }
+
+          function showLoader(visible) {
+
+            document.getElementById('loader').style.display=visible ? 'inline-block' : 'none';
+            }
+
+            function displayResults(data) {
+              const resultsDiv= 
+              document.getElementById('results');
+              resultsDiv.innerHTML='';
+              let items = [];
+
+              if(searchMode === 'video') {
+                items = data.items || [];
+                items.forEach(item => {
+                  const card =
+              document.createElement('div');
+
+              card.classList.add('result-card');
+               card.innerHTML =`<img src="${item.snippet.thumbnails.medium.url}"alt="${item.snippet.title}"><h3>${item.snippet.title}</h3> <p>$ {item.snippet.description} </p> <a href ="https://www.youtube.com/watch?v=${item.id.videoId}" target="blank">Watch Video</a>`;
+               resultsDiv.appendChild(card);
+            });
+          } else if (searchMode ==='image')  
+ {
+            items = data.items || [];
+            items.forEach(item => {
+              const card=
+            document.createElement('div');
+            card.classList.add('result-card');
+             card.innerHTML =
+           `<h3><a href ="${item.link}"target ="_blank">${item.title}</a></h3><p>${item.snippet}</p> `;  
+             resultsDiv.appendChild(card);
+           });
+          }
+         }
+  </script>
+</body>
+</html>
